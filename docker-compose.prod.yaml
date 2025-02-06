@@ -32,16 +32,13 @@ services:
   db:
     image: postgres:latest
     container_name: postgres_container
-    environment:
-      - POSTGRES_DB=twitter
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=admin
+    env_file: server/.env.prod
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d twitter -U admin"]
+      test: [ "CMD-SHELL", "pg_isready -d $POSTGRES_DB -U $POSTGRES_USER" ]
       interval: 30s
       timeout: 60s
       retries: 5
-      start_period: 80s
+      start_period: 30s
     ports:
       - "5432:5432"
     networks:

@@ -2,10 +2,7 @@ services:
   test_db:
     image: postgres:latest
     container_name: test_postgres_container
-    environment:
-      - POSTGRES_DB=test_twitter
-      - POSTGRES_USER=test
-      - POSTGRES_PASSWORD=test
+    env_file: server/.env.test
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d test_twitter -U test" ]  # Добавляем healthcheck для тестовой БД
       interval: 10s  # Интервал между проверками состояния контейнера
