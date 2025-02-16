@@ -4,7 +4,7 @@ services:
     container_name: test_postgres_container
     env_file: server/.env.test
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d test_twitter -U test" ]  # Добавляем healthcheck для тестовой БД
+      test: [ "CMD-SHELL", "pg_isready -d $$TEST_POSTGRES_DB -U $$TEST_POSTGRES_USER" ]  # Добавляем healthcheck для тестовой БД
       interval: 10s  # Интервал между проверками состояния контейнера
       timeout: 5s   # Таймаут для каждой проверки состояния
       retries: 5     # Количество попыток перед тем, как контейнер будет помечен как unhealthy
