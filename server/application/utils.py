@@ -21,8 +21,8 @@ async def add_test_information(session: AsyncSession):
         )
 
         if test_user is None:
-            first_user = await UserDAO.add(session=session, name="Dan", api_key="test")
-            second_user = await UserDAO.add(session=session, name="Mike", api_key="good")
+            first_user = await UserDAO.create_user(session=session, name="Dan", api_key="test")
+            second_user = await UserDAO.create_user(session=session, name="Mike", api_key="good")
             logger.info("Тестовые пользователи успешно добавлены: %s, %s", first_user, second_user)
             test_tweet = await TweetDAO.add(session=session, text="Hello!", author_id=second_user.id)
             logger.info(

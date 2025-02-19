@@ -167,7 +167,8 @@ async def add_one_user(
     curl -X POST "http://localhost:5000/api/add_user" -H "Content-Type: application/json" -d '{"name": "Dan", "api_key": "test"}'
     """
 
-    new_user = await UserDAO.add(session=session, **user.model_dump())
+    logger.info(f"{user.model_dump()}")
+    new_user = await UserDAO.create_user(session=session, **user.model_dump())
 
     return f"User added: {new_user}\n"
 
