@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import selectinload
 
 from application.database import AsyncSessionApp, proj_engine
 from application.models import BaseProj, Users

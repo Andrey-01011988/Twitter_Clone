@@ -18,11 +18,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# # Генерация соли
-# def generate_salt(length: int = 16) -> str:
-#     return secrets.token_hex(length)
-
-
 # Синхронная функция для хеширования
 def _hash_password(password: str, iterations: int = 10_000) -> str:
     byte_password = password.encode()
@@ -34,21 +29,7 @@ def _hash_password(password: str, iterations: int = 10_000) -> str:
 
 # Асинхронная обертка для хеширования
 async def hash_password(password: str, iterations: int = 10_000) -> str:
-    # if salt is None:
-    #     salt = generate_salt()
-    # Выполняем синхронную операцию в отдельном потоке
     return await asyncio.to_thread(_hash_password, password, iterations)
-
-# Проверка пароля
-# async def verify_password(password: str, hashed_password: str) -> bool:
-#     iterations, stored_hash = hashed_password.split(":")
-#     iterations = int(iterations)
-#     new_hash = await hash_password(password, iterations)
-#     return new_hash == hashed_password
-
-# Здесь добавь функцию хеширования данных
-# async def hash_password(some_password):
-#     return hashlib.sha256(some_password.encode()).hexdigest()
 
 
 # Назначение текущей сессии
