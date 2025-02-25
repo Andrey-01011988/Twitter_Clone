@@ -3,7 +3,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from application.api.dependencies import UserDAO, TweetDAO
+from application.api.dependencies import UserDAO, TweetDAO, hash_password
 from application.models import Users
 
 
@@ -13,11 +13,12 @@ logger = logging.getLogger(__name__)
 
 async def add_test_information(session: AsyncSession):
     logger.info("Создание новой сессии для добавления тестового пользователя %s", session)
+    hashed_api_key = await hash_password("test")
     try:
         test_user = await  UserDAO.find_one_or_none(
             session=session,
             options=[selectinload(Users.followers)],
-            api_key="test"
+            api_key=hashed_api_key
         )
 
         if test_user is None:

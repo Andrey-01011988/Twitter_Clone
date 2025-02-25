@@ -28,7 +28,7 @@ dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../.env.t
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path=dotenv_path)
 else:
-    logger.error(f"Файл {dotenv_path} не найден.")
+    logger.error("Файл %s не найден.", dotenv_path)
 
 db_user = os.getenv("TEST_POSTGRES_USER")
 db_password = os.getenv("TEST_POSTGRES_PASSWORD")
