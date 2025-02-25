@@ -7,6 +7,7 @@ COPY /server/application /server/application
 COPY /server/__init__.py /server
 COPY /server/alembic.ini /server
 COPY /server/requirements_prod.txt /server
+COPY /server/.env.prod /server
 
 RUN pip install --no-cache-dir -r /server/requirements_prod.txt
 

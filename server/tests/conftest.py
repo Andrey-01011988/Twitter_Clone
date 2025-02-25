@@ -1,9 +1,11 @@
 import logging
+import os
 import random
 from collections.abc import AsyncGenerator
 
 import pytest
 import pytest_asyncio
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
@@ -22,13 +24,23 @@ from tests.factories import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../.env.test'))
+if os.path.exists(dotenv_path):
+    load_dotenv(dotenv_path=dotenv_path)
+else:
+    logger.error("Файл %s не найден.", dotenv_path)
+
+db_user = os.getenv("TEST_POSTGRES_USER")
+db_password = os.getenv("TEST_POSTGRES_PASSWORD")
+db_name = os.getenv("TEST_POSTGRES_DB")
+# Строка подключения к тестовой базе данных через контейнер
+test_database_url = f"postgresql+asyncpg://{db_user}:{db_password}@test_db:5432/{db_name}"
 
 # Фикстуры с использованием фабрик
 @pytest_asyncio.fixture()
 async def test_db_session() -> AsyncGenerator[AsyncSession, None]:
     logger.info("Start fixture")
-    # Строка подключения к тестовой базе данных через контейнер
-    test_database_url = "postgresql+asyncpg://test:test@test_db:5432/test_twitter"
+    logger.info(f"{test_database_url}")
     test_engine_local = create_async_engine(test_database_url)
     logger.info("Engine created")
     test_async_session = async_sessionmaker(test_engine_local, expire_on_commit=False)

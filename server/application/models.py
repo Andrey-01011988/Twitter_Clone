@@ -114,9 +114,6 @@ class Tweets(BaseProj):
     likes: Mapped[List["Like"]] = relationship(
         "Like", back_populates="tweet", cascade="all, delete-orphan"
     )
-    # media: Mapped["Media"] = relationship(
-    #     "Media", back_populates="tweet", cascade="all, delete-orphan"
-    # )
     # Изменяем строку media на attachments
     attachments: Mapped[List["Media"]] = relationship(
         "Media", back_populates="tweet", cascade="all, delete-orphan"

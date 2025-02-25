@@ -1,3 +1,5 @@
+import asyncio
+import hashlib
 import logging
 from typing import Union
 
@@ -6,12 +8,28 @@ from fastapi import Header, HTTPException, Depends
 from application.crud import BaseDAO
 from application.database import AsyncSessionApp
 from application.models import Users, Tweets, Media, Like, Followers
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette.responses import JSONResponse
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+# Синхронная функция для хеширования
+def _hash_password(password: str, iterations: int = 10_000) -> str:
+    byte_password = password.encode()
+    hashed = hashlib.sha256(byte_password).hexdigest()
+    for _ in range(iterations - 1):
+        hashed = hashlib.sha256(hashed.encode()).hexdigest()
+    return f"{iterations}:{hashed}"
+
+
+# Асинхронная обертка для хеширования
+async def hash_password(password: str, iterations: int = 10_000) -> str:
+    return await asyncio.to_thread(_hash_password, password, iterations)
 
 
 # Назначение текущей сессии
@@ -45,14 +63,17 @@ async def get_client_token(
     :param api_key: API ключ пользователя
     :return: API ключ, если он валиден
     """
-    user = await UserDAO.find_one_or_none(api_key=api_key, session=session)
+    # Здесь должен быть перевод api_key в hash и сравнение его с хранимой в базе данных информацией
+    hashed_api_key = await hash_password(api_key)
+    logger.info("Ключ для поиска: %s", hashed_api_key)
+    user = await UserDAO.find_one_or_none(api_key=hashed_api_key, session=session)
     logger.info("Пользователь найден: %s", user)
     if user is None:
         raise HTTPException(
             status_code=403, detail="Доступ запрещен: неверный API ключ"
         )
-    logger.info("Возвращен ключ api_key: %s", api_key)
-    return api_key
+    logger.info("Возвращен ключ api_key: %s", hashed_api_key)
+    return hashed_api_key
 
 
 # Зависимость для получения текущего пользователя
@@ -73,12 +94,13 @@ async def get_current_user(
     :return: Объект пользователя (Users), если он найден, или
              JSONResponse с ошибкой 404, если пользователь не найден.
     """
+    logger.info("Переданный ключ %s", api_key)
     current_user = await UserDAO.find_one_or_none(
         session=session,
         options=[selectinload(Users.authors), selectinload(Users.followers)],
         api_key=api_key,
     )
-    if not current_user:
+    if current_user is None:
         logger.warning("Пользователь с API ключом %s не найден.", api_key)
         return JSONResponse(status_code=404, content={"error": "User not found"})
     return current_user
@@ -86,6 +108,22 @@ async def get_current_user(
 
 class UserDAO(BaseDAO):
     model = Users
+
+    @classmethod
+    async def create_user(cls, session: AsyncSession, name:str, api_key:str):
+        logger.info("Начало создания нового пользователя")
+        api_key = await hash_password(api_key)
+        new_user = Users(name=name, api_key=api_key)
+        try:
+            async with session.begin():
+                session.add(new_user)
+                await session.commit()
+                logger.info("Новый пользователь успешно создан")
+                return new_user
+        except SQLAlchemyError as e:
+            await session.rollback()
+            logger.error("Ошибка при создании нового пользователя: %s", e)
+            raise e
 
 
 class TweetDAO(BaseDAO):
